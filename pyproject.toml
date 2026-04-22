@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "inference"
+version = "0.1.0"
+description = "Simple, modular inference library for generation and embedding"
+requires-python = ">=3.10"
+dependencies = [
+    "torch",
+    "transformers",
+    "numpy",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+vllm = ["vllm"]
+ray = ["ray[data]"]
+all = ["vllm", "ray[data]"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["inference*"]
