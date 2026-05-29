@@ -87,20 +87,34 @@ def build_prompts(
     key: Optional[str] = None,
     formatting: str = "none",
     max_key_length: Optional[int] = None,
-) -> List[str]:
-    """Build prompt strings from records using a template or key extraction."""
+) -> List[Any]:
+    """Build prompts from records, by ``template``-substitution or by extracting ``key``.
+
+    Returned prompts are normally ``str``, but when ``key`` resolves to a
+    list (a chat-message list ``[{role, content}, ...]``) the value is
+    passed through as-is — downstream backends in instruct mode hand it
+    straight to ``apply_chat_template``. ``formatting`` is only applied to
+    string prompts; passthrough lists are skipped.
+    """
     if template is None and key is None:
         raise ValueError("Either template or key must be provided")
 
-    prompts: List[str] = []
+    prompts: List[Any] = []
     for r in records:
         if template:
             values = {k: str(v)[:max_key_length] for k, v in r.items()} if max_key_length else r
             prompts.append(template.format(**values))
         else:
-            prompts.append(str(r[key]))
+            val = r[key]
+            if isinstance(val, list):
+                prompts.append(val)
+            else:
+                prompts.append(str(val))
 
     if formatting and formatting != "none":
-        prompts = [apply_formatting(p, formatting) for p in prompts]
+        prompts = [
+            apply_formatting(p, formatting) if isinstance(p, str) else p
+            for p in prompts
+        ]
 
     return prompts
